@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EdgeGate — 嵌入式 Linux 工业数据采集网关(项目总览)</title>
+<style>
+  :root{
+    --bg:#0F172A; --panel:#1E293B; --card:#0B1220; --line:#334155;
+    --txt:#E2E8F0; --mut:#94A3B8; --acc:#38BDF8; --ok:#34D399; --warn:#FBBF24; --bad:#F87171;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--txt); font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif; line-height:1.65;}
+  .wrap{max-width:1080px; margin:0 auto; padding:32px 20px 64px;}
+  header.hero{border-bottom:1px solid var(--line); padding-bottom:28px; margin-bottom:28px;}
+  .hero h1{font-size:30px; letter-spacing:.5px;}
+  .hero .sub{color:var(--mut); margin-top:8px; font-size:15px;}
+  .hero .tagline{margin-top:14px; font-size:16px; color:var(--acc);}
+  .badges{margin-top:16px; display:flex; flex-wrap:wrap; gap:8px;}
+  .badge{background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:3px 12px; font-size:12.5px; color:var(--mut);}
+  .badge b{color:var(--txt);}
+  h2{font-size:20px; margin:36px 0 14px; padding-left:10px; border-left:4px solid var(--acc);}
+  h3{font-size:15.5px; margin:18px 0 8px; color:var(--acc);}
+  p{margin:8px 0; color:var(--txt);}
+  .muted{color:var(--mut); font-size:13px;}
+  .metrics{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin:16px 0;}
+  .metric{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px;}
+  .metric .num{font-size:24px; font-weight:700; color:var(--acc);}
+  .metric .lab{font-size:12.5px; color:var(--mut); margin-top:2px;}
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; margin:16px 0;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px;}
+  .card h4{font-size:14.5px; color:var(--acc); margin-bottom:6px;}
+  .card ul{list-style:none;}
+  .card li{font-size:13.5px; color:var(--mut); padding:3px 0 3px 16px; position:relative;}
+  .card li::before{content:'▸'; position:absolute; left:0; color:var(--acc);}
+  table{width:100%; border-collapse:collapse; margin:12px 0; font-size:13.5px;}
+  th,td{border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top;}
+  th{background:var(--panel); color:var(--txt); font-weight:600;}
+  td{color:#CBD5E1;}
+  .ok{color:var(--ok); font-weight:600;}
+  .warn{color:var(--warn); font-weight:600;}
+  figure{margin:18px 0; text-align:center;}
+  figure img{max-width:100%; border-radius:12px; border:1px solid var(--line);}
+  figcaption{color:var(--mut); font-size:12.5px; margin-top:6px;}
+  pre{background:#020617; border:1px solid var(--line); border-radius:10px; padding:14px 16px; overflow-x:auto; font-size:12.8px; line-height:1.55; color:#A5F3FC; margin:10px 0;}
+  code{font-family:Consolas,'Cascadia Mono',monospace;}
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin:14px 0;}
+  .flow{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:12px 0;}
+  .flow .step{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-size:13px;}
+  .flow .arr{color:var(--acc); font-weight:700;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:760px){ .grid2{grid-template-columns:1fr;} }
+  footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line); color:var(--mut); font-size:12.5px; text-align:center;}
+  .tag{display:inline-block; background:rgba(56,189,248,.12); border:1px solid rgba(56,189,248,.35); color:var(--acc); border-radius:6px; padding:1px 8px; font-size:12px; margin-right:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>EdgeGate · 基于嵌入式 Linux 的工业数据采集与边缘计算网关</h1>
+  <p class="sub">项目总览 · C++17 · 从零实现 Modbus RTU 与 MQTT 3.1.1 双协议栈 · ARM Cortex-A7 / x86 双平台</p>
+  <div class="badges">
+    <span class="badge"><b>0</b> 外部依赖(核心栈)</span>
+    <span class="badge"><b>11/11</b> 单元测试通过</span>
+    <span class="badge"><b>约 5,500</b> 行源码</span>
+    <span class="badge"><b>0</b> 编译告警(-Wall -Wextra)</span>
+    <span class="badge"><b>1</b> 致命缺陷审稿发现并修复</span>
+    <span class="badge">WSL 实编译 + 真实 Mosquitto 演示验证</span>
+  </div>
+</header>
+
+<h2>项目定位</h2>
+<p>工业现场 <b>RS485/Modbus RTU 仪表数据采集</b> → <b>边缘实时处理</b>(滤波、迟滞告警、数据质量)→ <b>MQTT 上云</b> 的完整网关实现。与"视频采集终端 / 语音助手 / 智能小车"等常见同类项目<b>领域完全不同</b>,但技术栈覆盖嵌入式 Linux 核心能力:系统编程、多线程、网络协议、串口通信、CMake 交叉编译、测试工程化。</p>
+
+<div class="metrics">
+  <div class="metric"><div class="num">2</div><div class="lab">从零实现协议栈(Modbus RTU + MQTT 3.1.1)</div></div>
+  <div class="metric"><div class="num">1</div><div class="lab">PTY 虚拟串口 + 软件从站: 全链路闭环验证</div></div>
+  <div class="metric"><div class="num">6</div><div class="lab">故障注入模式(crc / 超时 / 异常 / 错地址…)</div></div>
+  <div class="metric"><div class="num">12</div><div class="lab">测试可执行文件覆盖协议/并发/链路/网关</div></div>
+</div>
+
+<h2>总体架构</h2>
+<figure>
+  <img src="assets/architecture.svg" alt="EdgeGate 总体架构图">
+  <figcaption>五层架构: 云端/PC ↔ 应用与核心层 ↔ 双协议栈 ↔ HAL ↔ 设备侧;数据流为 RS485 轮询 → 边缘处理 → MQTT 上云,反向支持命令下发</figcaption>
+</figure>
+
+<h2>技术亮点</h2>
+<div class="cards">
+  <div class="card"><h4>① Modbus RTU 主站协议栈(零依赖)</h4>
+    <ul>
+      <li>CRC16-Modbus 位运算实现(标准已知向量验证)</li>
+      <li>功能码 03/04/06/0x10,异常应答分类,帧长奇偶性消歧</li>
+      <li>3.5T 静默间隔切帧(审稿发现并修复"帧首锚点"致命缺陷)</li>
+      <li>事务级互斥: 采集线程与命令线程不撕裂总线帧</li>
+      <li>寄存器映射: 16/32 位组合、i16/u32/f32、scale/offset 标度</li>
+    </ul>
+  </div>
+  <div class="card"><h4>② MQTT 3.1.1 客户端(零依赖)</h4>
+    <ul>
+      <li>报文编解码全量(含 CONNECT 标志位按 OASIS 规范)</li>
+      <li>QoS0/1 + 10s 未确认 DUP 重发;keepalive 心跳</li>
+      <li>PINGRESP 看门狗: broker 假死 1.5×keepalive 判死重连</li>
+      <li>指数退避重连(1s→30s+抖动)+ clean session 订阅重建</li>
+      <li>发送队列有界(512,断线丢旧保新)</li>
+    </ul>
+  </div>
+  <div class="card"><h4>③ 闭环验证与测试</h4>
+    <ul>
+      <li>openpty 创建真实虚拟串口对,termios/poll/字节流全真</li>
+      <li>软件从站: 寄存器堆 + 5 种故障注入(演示 30 秒出效果)</li>
+      <li>用自身编解码"自举"fake broker 测试 MQTT 客户端</li>
+      <li>9600 波特逐字节流式回归测试(锁住 3.5T 切帧正确性)</li>
+    </ul>
+  </div>
+  <div class="card"><h4>④ 边缘计算与工程化</h4>
+    <ul>
+      <li>滑动平均(O(1) 运行和)+ 迟滞告警状态机(防抖动,仅翻转上云)</li>
+      <li>环形缓冲(双条件变量)、事件总线(快照后解锁回调)、状态机</li>
+      <li>禁异常、RAII 线程/fd、优雅停止顺序(采集→遥测→MQTT→Cmd→从站)</li>
+      <li>JSON 配置、TCP 命令服务器(单线程 poll 多路复用)、CLI watch、可选 Qt GUI</li>
+    </ul>
+  </div>
+</div>
+
+<h2>构建与测试验证(真实执行结果)</h2>
+<div class="grid2">
+  <div class="panel">
+    <h3>构建环境</h3>
+    <p class="muted">WSL Ubuntu 24.04 · g++ 13.3 · CMake 3.28 · -Wall -Wextra · C++17</p>
+    <pre><code>$ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+$ cmake --build build -j4        # 0 告警 0 错误
+$ ctest --test-dir build --output-on-failure</code></pre>
+    <h3>测试结果</h3>
+    <table>
+      <tr><th>测试</th><th>覆盖内容</th><th>结果</th></tr>
+      <tr><td>test_modbus_link</td><td>PTY 主从全链路 + 故障注入 + <b>流式字节回归</b></td><td class="ok">通过</td></tr>
+      <tr><td>test_mqtt_client</td><td>fake broker 握手/订阅/发布/重连/心跳</td><td class="ok">通过</td></tr>
+      <tr><td>test_mqtt_packets</td><td>变长编码 7 边界 / CONNECT 字节比对 / 半包</td><td class="ok">通过</td></tr>
+      <tr><td>test_modbus_crc / rtu</td><td>CRC 已知向量 / 编解码回环 / 3.5T</td><td class="ok">通过</td></tr>
+      <tr><td>test_json / ring_buffer / state_machine</td><td>解析边界 / 并发压力 / 转移表</td><td class="ok">通过</td></tr>
+      <tr><td>test_rule_engine / signal_filter</td><td>迟滞边界 / 滑动平均数值</td><td class="ok">通过</td></tr>
+      <tr><td>test_gateway(规划)</td><td>pty-sim 配置端到端(见演示证据)</td><td class="ok">演示实测</td></tr>
+    </table>
+  </div>
+  <div class="panel">
+    <h3>端到端演示证据(真实 Mosquitto)</h3>
+    <p class="muted">mosquitto broker + 网关(pty-sim 虚拟串口 + 软件从站)运行 8 秒,mosquitto_sub 订阅结果:</p>
+    <pre><code>$ mosquitto_sub -t 'edge-gate/edge-gate-01/#' -v -q 1
+edge-gate/edge-gate-01/status {"device":"edge-gate-01",
+  "mqttConnected":true,"state":"Running","uptimeMs":1003}
+edge-gate/edge-gate-01/telemetry {"device":"edge-gate-01",
+  "points":[{"id":"temp1","name":"1号炉温度","quality":"good",
+  "unit":"C","value":30}, ... {"id":"pump_speed","quality":"bad"}],
+  "stats":{"crcErrors":0,"exceptions":0,"rx":6,"timeouts":0,"tx":6}}</code></pre>
+    <p class="muted">1Hz 遥测连续 8 条、tx/rx 计数递增、CRC/超时/异常全 0;首次连接尝试失败后 1s 内自动重连成功(重连逻辑实测);SIGTERM 后按"采集→遥测→MQTT→Cmd→从站"顺序优雅退出。</p>
+    <h3>审稿与修复记录</h3>
+    <ul style="font-size:13px; color:var(--mut); list-style:none; padding-left:0;">
+      <li>▸ 致命: 从站 3.5T 切帧锚定帧首(真机必现半帧丢失)→ 改为最后字节锚点 + 流式回归测试</li>
+      <li>▸ 高: MQTT 无 PINGRESP 看门狗 / 主站事务未串行化 / 状态机回调数据竞争 / 发送队列无上限 → 全部修复</li>
+      <li>▸ 中: 命令服务器绑定回环 + 出站上限、串口超时预算、重连订阅去重、功能码 0x16→0x10 标准对齐 → 全部修复</li>
+    </ul>
+  </div>
+</div>
+
+<h2>快速开始(一台 x86 Linux / WSL 即可)</h2>
+<div class="flow">
+  <span class="step">apt 安装 g++/cmake/mosquitto</span><span class="arr">→</span>
+  <span class="step">./scripts/build.sh</span><span class="arr">→</span>
+  <span class="step">./scripts/run-demo.sh(起 broker + 网关)</span><span class="arr">→</span>
+  <span class="step">mosquitto_sub 观察遥测</span><span class="arr">→</span>
+  <span class="step">echo '{"cmd":"inject_fault","fault":"crc"}' | nc 127.0.0.1 19000</span>
+</div>
+<pre><code># 构建 + 测试
+./scripts/build.sh                          # cmake → make → ctest(11/11)
+# 一键演示
+./scripts/run-demo.sh                       # 启动 mosquitto 与网关(pty-sim)
+mosquitto_sub -t 'edge-gate/edge-gate-01/#' -v -q 1
+printf '{"cmd":"snapshot"}\n' | nc 127.0.0.1 19000   # 运维命令通道</code></pre>
+
+<h2>交叉编译与部署(IMX6ULL)</h2>
+<table>
+  <tr><th>步骤</th><th>命令</th></tr>
+  <tr><td>交叉工具链</td><td><code>apt install g++-arm-linux-gnueabihf</code>(或 Linaro 工具链)</td></tr>
+  <tr><td>交叉构建</td><td><code>cmake -S . -B build-arm -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-arm-linux-gnueabihf.cmake -DCMAKE_BUILD_TYPE=Release && cmake --build build-arm -j4</code></td></tr>
+  <tr><td>部署</td><td><code>./scripts/deploy-arm.sh</code> — scp 二进制 + 配置 + systemd 单元,ssh 安装启动</td></tr>
+  <tr><td>真机配置</td><td>config/edge-gate-arm.json: serial.device=<code>/dev/ttymxc2</code>、slaveSim=false、mqtt.host 指向服务器</td></tr>
+</table>
+
+<h2>目录结构</h2>
+<pre><code>edge-gate/
+├── src/core/      环形缓冲 · 事件总线 · 状态机 · 线程 RAII · 日志
+├── src/util/      手写 JSON DOM · 配置加载
+├── src/hal/       串口抽象(PosixSerial/termios) · PTY 虚拟串口对
+├── src/modbus/    CRC16 · RTU 编解码 · 主站(轮询/标度) · 软件从站(故障注入)
+├── src/edge/      滑动平均滤波 · 迟滞告警规则引擎
+├── src/net/       MQTT 3.1.1 报文编解码 · 客户端(QoS/重连/看门狗) · TCP 命令服务器
+├── src/app/       网关管线(Gateway) · CLI · main(daemon/信号)
+├── src/ui/qt/     Qt GUI(可选,自绘实时曲线)
+├── tests/         注册式测试框架 + 11 个测试可执行 + fake_broker 自举
+├── cmake/         es_options.cmake · 交叉工具链文件
+├── config/        edge-gate.json(x86 演示)/ edge-gate-arm.json(真机)
+├── scripts/       build / run-demo / install-mosquitto / deploy-arm / systemd 单元
+└── docs/          architecture.md(架构详解) · overview.html(本页) · use-guide.md(使用说明与原理) · code-map.md(代码导航)</code></pre>
+
+<h2>Roadmap</h2>
+<table>
+  <tr><th>方向</th><th>内容</th><th>可深挖的点</th></tr>
+  <tr><td>协议扩展</td><td>Modbus TCP、MQTT TLS(OpenSSL)、OPC UA</td><td>安全通道、加密握手</td></tr>
+  <tr><td>可靠性</td><td>QoS1 断线续传持久化、看门狗、日志回卷</td><td>至少一次语义落地</td></tr>
+  <tr><td>可运维</td><td>Web 配置页(轻量 HTTP)、OTA 升级、SNMP</td><td>设备管理闭环</td></tr>
+  <tr><td>算法</td><td>趋势预测告警、FFT 振动分析</td><td>边缘 AI 下沉</td></tr>
+</table>
+
+<footer>EdgeGate v1.0.0 · 嵌入式 Linux 工业数据采集网关项目 · 全部代码与文档随仓库交付</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+# ===== EdgeGate 构建产物 =====
+build/
+build-*/
+cmake-build-*/
+
+# ===== 运行数据(不入库) =====
+data/
+snapshots/
+logs/
+*.log
+*.jsonl
+
+# ===== 编译中间文件 =====
+*.o
+*.a
+*.so
+*.out
+compile_commands.json
+
+# ===== 编辑器/IDE =====
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store

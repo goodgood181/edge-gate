@@ -1,0 +1,17 @@
+{
+  "_comment": "EdgeGate ARM 板(IMX6ULL)部署配置: 真实串口 /dev/ttymxc2,关闭模拟从站(线上有真实 PLC/传感器),MQTT 指向服务器 IP(部署前改为实际地址)。",
+  "device": { "id": "edge-gate-01", "name": "EdgeGate 工业数据采集网关" },
+  "log": { "level": "info", "file": "/var/log/edge-gate.log", "console": false },
+  "serial": { "device": "/dev/ttymxc2", "baud": 9600, "dataBits": 8, "parity": "N", "stopBits": 1 },
+  "slaveSim": { "enabled": false, "slaveId": 1, "registerCount": 64 },
+  "points": [
+    { "id": "temp1", "name": "1号炉温度", "slaveId": 1, "func": 3, "startAddr": 0, "count": 1, "dataType": "u16", "scale": 0.1, "unit": "C", "pollPeriodMs": 500, "highAlarm": 80, "highAlarmEnabled": true, "hysteresis": 2 },
+    { "id": "press1", "name": "主管道压力", "slaveId": 1, "func": 4, "startAddr": 0, "count": 1, "scale": 0.01, "unit": "MPa", "pollPeriodMs": 500 },
+    { "id": "flow1", "name": "冷却水流量", "slaveId": 1, "func": 3, "startAddr": 2, "count": 2, "is32Bit": true, "dataType": "f32", "unit": "m3/h", "pollPeriodMs": 1000, "lowAlarm": 5, "lowAlarmEnabled": true, "hysteresis": 1 },
+    { "id": "volt_a", "name": "A相电压", "slaveId": 1, "func": 4, "startAddr": 10, "count": 1, "scale": 1, "unit": "V", "pollPeriodMs": 1000 },
+    { "id": "pump_speed", "name": "泵转速设定", "slaveId": 1, "func": 6, "startAddr": 20, "count": 1, "writable": true, "unit": "rpm", "pollPeriodMs": 2000 }
+  ],
+  "mqtt": { "enabled": true, "host": "192.168.1.100", "port": 1883, "clientId": "edge-gate-01", "keepaliveSec": 30, "cleanSession": true, "topicPrefix": "edge-gate/edge-gate-01", "telemetryPeriodMs": 2000, "qos": 1, "retainStatus": true },
+  "cmdServer": { "enabled": true, "port": 19000 },
+  "jsonl": { "enabled": true, "path": "/var/lib/edge-gate/data/gateway.jsonl" }
+}

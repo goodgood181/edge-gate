@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EdgeGate 监控</title>
+<style>
+  body{background:#0f172a;color:#e2e8f0;font-family:'Segoe UI','Microsoft YaHei',sans-serif;margin:0;padding:20px}
+  h1{font-size:20px;margin:0 0 4px}
+  #dev{color:#38bdf8;font-size:14px}
+  #status{color:#94a3b8;font-size:13px;margin-bottom:12px}
+  .grid{display:grid;grid-template-columns:2fr 3fr;gap:14px}
+  @media (max-width:800px){.grid{grid-template-columns:1fr}}
+  table{border-collapse:collapse;font-size:13px;width:100%;background:#0b1220}
+  th,td{border:1px solid #334155;padding:6px 8px;text-align:left}
+  th{background:#1e293b;font-weight:600}
+  td.g{color:#2ecc71} td.s{color:#f1c40f} td.b{color:#e74c3c}
+  canvas{background:#161a24;border:1px solid #334155;border-radius:8px;width:100%}
+</style>
+</head>
+<body>
+<h1>EdgeGate 监控 <span id="dev"></span></h1>
+<div id="status">连接中...</div>
+<div class="grid">
+  <div><table><thead><tr><th>ID</th><th>名称</th><th>值</th><th>单位</th><th>质量</th></tr></thead><tbody id="pts"></tbody></table></div>
+  <div><canvas id="curves" width="720" height="360"></canvas></div>
+</div>
+<script>
+var series = {};
+var COLORS = ['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#1abc9c'];
+async function refresh() {
+  try {
+    var r = await fetch('/api/snapshot');
+    var d = await r.json();
+    document.getElementById('dev').textContent = d.device || '';
+    document.getElementById('status').textContent =
+      '状态: ' + d.state + ' | MQTT: ' + (d.mqttConnected ? '已连接' : '未连接') +
+      ' | tx=' + d.stats.tx + ' rx=' + d.stats.rx + ' timeout=' + d.stats.timeouts;
+    var tbody = document.getElementById('pts');
+    tbody.innerHTML = '';
+    var now = Date.now();
+    d.points.forEach(function(p, i) {
+      var tr = document.createElement('tr');
+      var qc = p.quality === 'good' ? 'g' : (p.quality === 'stale' ? 's' : 'b');
+      tr.innerHTML = '<td>' + p.id + '</td><td>' + p.name + '</td><td>' +
+        Number(p.value).toFixed(3) + '</td><td>' + p.unit + '</td><td class="' + qc + '">' +
+        p.quality + '</td>';
+      tbody.appendChild(tr);
+      if (!series[p.id]) { series[p.id] = { color: COLORS[i % COLORS.length], pts: [] }; }
+      if (p.quality !== 'bad') {
+        series[p.id].pts.push({ x: now, y: p.value });
+        if (series[p.id].pts.length > 300) series[p.id].pts.shift();
+      }
+    });
+    draw(d);
+  } catch (e) { /* 网关未就绪时静默重试 */ }
+}
+function draw(d) {
+  var c = document.getElementById('curves');
+  var ctx = c.getContext('2d');
+  var W = c.width, H = c.height, L = 46, T = 20, B = 14;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#161a24'; ctx.fillRect(0, 0, W, H);
+  // 量程
+  var yMin = Infinity, yMax = -Infinity;
+  for (var k in series) for (var i = 0; i < series[k].pts.length; ++i) {
+    var v = series[k].pts[i].y;
+    if (v < yMin) yMin = v; if (v > yMax) yMax = v;
+  }
+  if (!isFinite(yMin)) { yMin = 0; yMax = 1; }
+  if (yMax - yMin < 1e-9) { yMax += 1; yMin -= 1; }
+  var pad = (yMax - yMin) * 0.1; yMin -= pad; yMax += pad;
+  // 网格 + 刻度
+  ctx.strokeStyle = '#2a303e'; ctx.fillStyle = '#8a93a6'; ctx.font = '11px sans-serif';
+  for (var i2 = 0; i2 <= 4; ++i2) {
+    var gy = T + (H - T - B) * i2 / 4;
+    ctx.beginPath(); ctx.moveTo(L, gy); ctx.lineTo(W, gy); ctx.stroke();
+    ctx.fillText((yMax - (yMax - yMin) * i2 / 4).toFixed(1), 2, gy + 3);
+  }
+  // 折线
+  for (var k2 in series) {
+    var s = series[k2];
+    if (s.pts.length < 2) continue;
+    var x0 = s.pts[0].x, x1 = s.pts[s.pts.length - 1].x;
+    var xspan = (x1 - x0) || 1;
+    ctx.strokeStyle = s.color; ctx.lineWidth = 1.6; ctx.beginPath();
+    for (var j = 0; j < s.pts.length; ++j) {
+      var fx = L + (s.pts[j].x - x0) / xspan * (W - L);
+      var fy = (H - B) - (s.pts[j].y - yMin) / (yMax - yMin) * (H - T - B);
+      if (j === 0) ctx.moveTo(fx, fy); else ctx.lineTo(fx, fy);
+    }
+    ctx.stroke();
+  }
+  // 图例
+  var lx = L; ctx.font = '12px sans-serif';
+  for (var k3 in series) {
+    ctx.fillStyle = series[k3].color; ctx.fillText(k3, lx, 12); lx += ctx.measureText(k3).width + 24;
+  }
+}
+setInterval(refresh, 1000);
+refresh();
+</script>
+</body>
+</html>

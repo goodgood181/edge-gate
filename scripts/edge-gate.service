@@ -1,0 +1,26 @@
+# 文件路径: scripts/edge-gate.service
+# 职责: systemd 单元 —— ARM 板上开机自启 + 崩溃自动拉起。
+# 安装: cp 到 /etc/systemd/system/edge-gate.service,然后
+#       systemctl daemon-reload && systemctl enable --now edge-gate
+# 说明: 网关自带 daemonize(双 fork + PID 文件),故 Type=forking + PIDFile;
+#       SIGTERM 触发优雅停止(网关信号处理,再按一次强制退出)。
+[Unit]
+Description=EdgeGate 工业数据采集网关 (Modbus RTU/RS485 -> MQTT)
+Documentation=file:///etc/edge-gate/edge-gate.json
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+PIDFile=/run/edge-gate.pid
+ExecStart=/usr/local/bin/edge-gate --config /etc/edge-gate/edge-gate.json --daemon
+ExecStop=/bin/kill -TERM $MAINPID
+WorkingDirectory=/var/lib/edge-gate
+Restart=on-failure
+RestartSec=3
+# 串口权限: IMX6ULL 上 /dev/ttymxc2 通常属 root:tty,嵌入式惯例以 root 运行
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
