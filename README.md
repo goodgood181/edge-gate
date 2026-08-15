@@ -53,7 +53,7 @@ sudo apt install -y g++ cmake make mosquitto mosquitto-clients
 
 ---
 
-## 5. 交叉编译到 I.MX6ULL(ARM Cortex-A7)
+## 4. 交叉编译到 I.MX6ULL(ARM Cortex-A7)
 
 **硬件事实**: I.MX6ULL 为 NXP 单核 **Cortex-A7**,常见主频 **528MHz**(最高 800MHz,以实际板卡为准);板载 UART 对应设备节点通常为 `/dev/ttymxc2`、`/dev/ttymxc3`(以实际板卡为准);ARMv7-A 硬浮点,交叉工具链用 `arm-linux-gnueabihf-` 前缀。
 
@@ -86,7 +86,7 @@ ssh root@<板子IP> "journalctl -u edge-gate -f"   # 查看运行日志
 
 ---
 
-## 6. 目录结构
+## 5. 目录结构
 
 ```
 edge-gate/
@@ -125,7 +125,7 @@ edge-gate/
 
 ---
 
-## 7. 测试说明
+## 6. 测试说明
 
 **测试分层**(详见 `docs/architecture.md` §9 与 `tests/` 源码):
 
@@ -146,7 +146,7 @@ edge-gate/
 
 ---
 
-## 8. Roadmap
+## 7. Roadmap
 
 | 优先级 | 方向 | 说明 |
 |---|---|---|
